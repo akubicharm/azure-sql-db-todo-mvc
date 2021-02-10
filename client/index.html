@@ -41,13 +41,13 @@
 			</span>
 			<ul class="filters">
 				<li>
-					<a href="#/all" :class="{ selected: visibility == 'all' }">All</a>
+					<a href="#/all" :class="{ selected: visibility == "all" }">All</a>
 				</li>
 				<li>
-					<a href="#/active" :class="{ selected: visibility == 'active' }">Active</a>
+					<a href="#/active" :class="{ selected: visibility == "active" }">Active</a>
 				</li>
 				<li>
-					<a href="#/completed" :class="{ selected: visibility == 'completed' }">Completed</a>
+					<a href="#/completed" :class="{ selected: visibility == "completed" }">Completed</a>
 				</li>
 			</ul>
 			<button class="clear-completed" @click="removeCompleted" v-show="todos.length > remaining">
@@ -63,8 +63,8 @@
 	</footer>
 
 	<script>
-		API = "api/todo";
-		HEADERS = { 'Accept': 'application/json', 'Content-Type': 'application/json' };		
+		API = "http://localhost:7071/api";
+		HEADERS = { "Accept": "application/json", "Content-Type": "application/json" };		
 
 		// visibility filters
 		var filters = {
@@ -73,11 +73,13 @@
 			},
 			active: function (todos) {
 				return todos.filter(function (todo) {
+					console.log(todo);
 					return !todo.completed;
 				});
 			},
 			completed: function (todos) {
 				return todos.filter(function (todo) {
+					console.log(todo);
 					return todo.completed;
 				});
 			}
@@ -96,7 +98,7 @@
 			// initialize data 
 			// by loading it from REST API
 			created: function() {
-				fetch(API + "/", {headers: HEADERS, method: "GET"})
+				fetch(API + "/listToDo", {headers: HEADERS, method: "GET"})
 				.then(res => {
 					return res.json();
 				})
@@ -133,26 +135,27 @@
 			},
 
 			// methods that implement data logic.
-			// note there's no DOM manipulation here at all.
+			// note there"s no DOM manipulation here at all.
 			methods: {
 				addTodo: function () {
 					var value = this.newTodo && this.newTodo.trim();
 					if (!value) {
 						return;
 					}
-					fetch(API + "/", {headers: HEADERS, method: "POST", body: JSON.stringify({title: value})})
+					fetch(API + "/createToDo", {headers: HEADERS, method: "POST", body: JSON.stringify({title: value})})
 					.then(res => {					
 						if (res.ok) {												
-							this.newTodo = ''
+							this.newTodo = ""
 							return res.json();
 						}
 					}).then(res => {						
-						this.todos.push(res[0]);
+						//this.todos.push(res[0]);
+						this.todos.push(res);
 					})
 				},
 
 				completeTodo: function(todo) {
-					fetch(API + `/${todo.id}`, {headers: HEADERS, method: "PUT", body: JSON.stringify({completed: todo.completed})});
+					fetch(API + "/updateToDo", {headers: HEADERS, method: "PUT", body: JSON.stringify({id: todo.id, completed: todo.completed})});
 				},
 
 				completeAll: function() {
@@ -163,7 +166,7 @@
 
 				removeTodo: function (todo) {					
 					var id  = todo.id;
-					fetch(API + `/${id}`, {headers: HEADERS, method: "DELETE"}).
+					fetch(API + "/deleteToDo", {headers: HEADERS, method: "DELETE",  body: JSON.stringify({id: todo.id})}).
 					then(res => {
 						if (res.ok) {
 							var index = this.todos.indexOf(todo);
@@ -186,7 +189,7 @@
 					if (!todo.title) {
 						this.removeTodo(todo);
 					} else {						
-						fetch(API + `/${todo.id}`, {headers: HEADERS, method: "PUT", body: JSON.stringify({title: todo.title})});
+						fetch(API + "/updateToDo", {headers: HEADERS, method: "PUT", body: JSON.stringify({id: todo.id, title: todo.title})});
 					}
 				},
 
